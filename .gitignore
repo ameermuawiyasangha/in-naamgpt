@@ -8,3 +8,4 @@ __pycache__/
 model/data/scraped_names_raw.txt
 .vercel
 .env*.local
+.local

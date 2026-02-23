@@ -331,6 +331,14 @@ GitHub Actions CI runs with **least-privilege permissions** (`contents: read` on
 
 ---
 
+## Contributing
+
+Contributions are welcome! Whether it's a new Learn chapter, visualization improvement, dataset expansion, or bug fix — check out the [Contributing Guide](CONTRIBUTING.md) to get started.
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
+---
+
 ## Credits & Inspiration
 
 This project stands on the shoulders of:
