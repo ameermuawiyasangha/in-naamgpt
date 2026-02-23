@@ -49,7 +49,8 @@ def main():
         if m == "lm_head": return state_dict["lm_head"][r]
         return None
 
-    step_options = [0, 250, 500, 999]
+    step_options = [0, 2500, 5000, 9999]
+    RECORD_EVERY = 10
 
     # Record initial state
     steps = [{
@@ -69,8 +70,12 @@ def main():
     m_buf = [0.0] * len(params)
     v_buf = [0.0] * len(params)
 
+    shuffled = list(docs)
     for step in range(NUM_STEPS):
-        doc = docs[step % len(docs)]
+        idx = step % len(shuffled)
+        if idx == 0:
+            random.shuffle(shuffled)
+        doc = shuffled[idx]
         tokens = [bos] + [stoi[ch] for ch in doc] + [bos]
         n = min(block_size, len(tokens) - 1)
 
@@ -84,7 +89,7 @@ def main():
         loss = (1 / n) * sum(losses)
         loss.backward()
 
-        lr_t = LEARNING_RATE * (1 - step / NUM_STEPS)
+        lr_t = LEARNING_RATE * 0.5 * (1 + math.cos(math.pi * step / NUM_STEPS))
 
         # Capture gradients before update
         param_grads = {}
@@ -105,19 +110,20 @@ def main():
         import unicodedata
         display_word = unicodedata.normalize("NFC", doc)
 
-        step_record = {
-            "step": step + 1,
-            "loss": round(loss.data, 6),
-            "learning_rate": round(lr_t, 8),
-            "word": display_word,
-            "params": {
-                pid["id"]: {
-                    "grad": [round(g, 8) for g in param_grads[pid["id"]]],
-                    "after": [round(v.data, 8) for v in get_param_row(pid)]
-                } for pid in param_options
+        if (step + 1) % RECORD_EVERY == 0 or step in step_options:
+            step_record = {
+                "step": step + 1,
+                "loss": round(loss.data, 6),
+                "learning_rate": round(lr_t, 8),
+                "word": display_word,
+                "params": {
+                    pid["id"]: {
+                        "grad": [round(g, 8) for g in param_grads[pid["id"]]],
+                        "after": [round(v.data, 8) for v in get_param_row(pid)]
+                    } for pid in param_options
+                }
             }
-        }
-        steps.append(step_record)
+            steps.append(step_record)
 
         if (step + 1) % 100 == 0:
             print(f"step {step+1:4d}/{NUM_STEPS} | loss {loss.data:.4f}")

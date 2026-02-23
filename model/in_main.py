@@ -3,10 +3,11 @@ Train, save, and run inference for Indian-name GPT (character-level).
 Adapted from ko-microgpt for Latin-script Indian names.
 """
 
+import copy
+import json
 import math
 import pickle
 import random
-import json
 import re
 import unicodedata
 from pathlib import Path
@@ -17,9 +18,9 @@ CHECKPOINT_PATH = BASE_DIR / "checkpoints" / "in_model.pkl"
 SNAPSHOT_PATH = BASE_DIR / ".." / "app" / "public" / "data" / "in_embedding_snapshot.json"
 
 RANDOM_SEED = 42
-NUM_STEPS = 1000
+NUM_STEPS = 10000
 NUM_SAMPLES = 20
-TEMPERATURE = 0.5
+TEMPERATURE = 0.35
 MAX_TOKENS = None
 
 N_LAYER = 1
@@ -247,8 +248,12 @@ def train(docs, tokenizer, state_dict, params, config,
     block_size = config["block_size"]
     n_layer = config["n_layer"]
 
+    shuffled = list(docs)
     for step in range(num_steps):
-        doc = docs[step % len(docs)]
+        idx = step % len(shuffled)
+        if idx == 0:
+            random.shuffle(shuffled)
+        doc = shuffled[idx]
         tokens = [bos] + [stoi[ch] for ch in doc] + [bos]
         n = min(block_size, len(tokens) - 1)
 
@@ -262,7 +267,7 @@ def train(docs, tokenizer, state_dict, params, config,
         loss = (1 / n) * sum(losses)
         loss.backward()
 
-        lr_t = learning_rate * (1 - step / num_steps)
+        lr_t = learning_rate * 0.5 * (1 + math.cos(math.pi * step / num_steps))
         for i, p in enumerate(params):
             m[i] = beta1 * m[i] + (1 - beta1) * p.grad
             v[i] = beta2 * v[i] + (1 - beta2) * p.grad**2
