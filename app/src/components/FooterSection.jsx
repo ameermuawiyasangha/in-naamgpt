@@ -1,3 +1,5 @@
+import VisitorStats from './VisitorStats'
+
 export default function FooterSection() {
   return (
     <footer className="bg-bh-black text-white py-12 md:py-16 px-4 md:px-8">
@@ -38,8 +40,11 @@ export default function FooterSection() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t-2 border-white/10 text-white/30 text-xs">
-          Built with pure math — {new Date().getFullYear()}
+        <div className="mt-10 pt-6 border-t-2 border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <span className="text-white/30 text-xs">
+            Built with pure math — {new Date().getFullYear()}
+          </span>
+          <VisitorStats />
         </div>
       </div>
     </footer>
